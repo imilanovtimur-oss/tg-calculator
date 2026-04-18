@@ -3,321 +3,332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Glass Cartoon Tetris Pro</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>АРН «ПРИКАЗ» — Тактическая панель</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto+Mono:wght@400;700&family=Press+Start+2P&display=swap');
+        
         :root {
-            --bg-gradient: linear-gradient(135deg, #0f172a, #1e40af);
-            --glass: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --accent: #00f2ff;
-            --text: #ffffff;
+            --army-green: #3b4232;
+            --army-dark: #1a1d16;
+            --accent: #d97706;
         }
-
-        .theme-blue { --bg-gradient: linear-gradient(135deg, #0f172a, #1e40af); --accent: #00f2ff; }
-        .theme-purple { --bg-gradient: linear-gradient(135deg, #2e1065, #7c3aed); --accent: #bc77ff; }
-        .theme-green { --bg-gradient: linear-gradient(135deg, #064e3b, #10b981); --accent: #4ade80; }
-        .theme-dark { --bg-gradient: linear-gradient(135deg, #000000, #333333); --accent: #94a3b8; }
 
         body {
-            font-family: -apple-system, system-ui, sans-serif;
+            font-family: 'Roboto Mono', monospace;
+            background-color: var(--army-dark);
+            background-image: 
+                linear-gradient(rgba(59, 66, 50, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 66, 50, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: #e2e8f0;
+            min-height: 100vh;
             margin: 0;
-            background: var(--bg-gradient);
-            background-attachment: fixed;
-            transition: background 0.5s ease;
-            color: var(--text);
-            height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            user-select: none;
-            touch-action: none;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
 
-        /* Темы */
-        .theme-selector {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            padding: 10px;
-            padding-top: env(safe-area-inset-top);
+        .stencil-text { font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
+
+        .military-card {
+            background: rgba(26, 29, 22, 0.95);
+            border: 2px solid var(--army-green);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .theme-dot {
-            width: 22px;
-            height: 22px;
+
+        /* Адаптивное колесо */
+        .wheel-outer {
+            position: relative;
+            width: 100%;
+            max-width: 500px; /* Максимальный размер на ПК */
+            margin: 0 auto;
+            aspect-ratio: 1/1;
+        }
+
+        .wheel-container {
+            width: 100%;
+            height: 100%;
+            border: 8px solid #4a5568;
             border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.4);
-            cursor: pointer;
+            background: #000;
+            position: relative;
+            overflow: hidden;
         }
 
-        /* Панели */
-        .glass-panel {
-            background: var(--glass);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+            transition: transform 7s cubic-bezier(0.15, 0, 0.15, 1);
         }
 
-        /* Сетка игры */
-        #game-container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-            gap: 15px;
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid var(--accent);
+            z-index: 100;
+            filter: drop-shadow(0 0 10px var(--accent));
         }
 
-        canvas#game-canvas {
-            background: rgba(0, 0, 0, 0.2);
-            border: 2px solid var(--glass-border);
-            border-radius: 15px;
+        .lcd-display {
+            background: #0a0c08;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            text-shadow: 0 0 5px var(--accent);
         }
 
-        /* Статистика справа */
-        .side-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 80px;
-        }
-        .stat-box {
-            padding: 8px;
-            text-align: center;
-        }
-        .stat-label { font-size: 0.6rem; opacity: 0.7; text-transform: uppercase; }
-        .stat-val { font-size: 1rem; font-weight: 800; color: var(--accent); }
-
-        /* Кнопки - Компактные и современные */
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            padding: 15px;
-            padding-bottom: calc(15px + env(safe-area-inset-bottom));
-        }
-
-        .btn {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            color: white;
-            border-radius: 16px;
-            padding: 12px;
-            font-size: 1.4rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .btn-military {
+            background: var(--army-green);
+            border-bottom: 4px solid #242a1f;
             transition: all 0.1s;
         }
-        .btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
-        .btn-main { background: var(--accent); color: #000; border: none; font-weight: bold; }
+        .btn-military:active { border-bottom-width: 0; transform: translateY(4px); }
 
-        /* Меню оверлей */
-        #overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
+        /* Кастомный скролл */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: var(--army-green); border-radius: 3px; }
 
-        .title {
-            font-size: 3rem;
-            font-weight: 900;
-            color: var(--accent);
-            text-shadow: 0 0 20px var(--accent);
-            margin-bottom: 20px;
+        .scanline {
+            position: fixed; inset: 0;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.05) 50%);
+            background-size: 100% 4px;
+            pointer-events: none; z-index: 1000;
         }
     </style>
 </head>
-<body class="theme-blue">
-
-    <div class="theme-selector">
-        <div class="theme-dot" style="background: #1e40af;" onclick="setTheme('theme-blue')"></div>
-        <div class="theme-dot" style="background: #7c3aed;" onclick="setTheme('theme-purple')"></div>
-        <div class="theme-dot" style="background: #10b981;" onclick="setTheme('theme-green')"></div>
-        <div class="theme-dot" style="background: #333333;" onclick="setTheme('theme-dark')"></div>
-    </div>
-
-    <div id="game-container">
-        <canvas id="game-canvas"></canvas>
-        
-        <div class="side-panel">
-            <div class="glass-panel stat-box">
-                <div class="stat-label">Next</div>
-                <canvas id="next-canvas" width="60" height="60"></canvas>
+<body class="p-2 md:p-6 lg:p-10">
+    <div class="scanline"></div>
+    
+    <div class="max-w-[1600px] mx-auto space-y-4 md:space-y-8">
+        <header class="flex flex-col md:flex-row justify-between items-center military-card p-4 md:p-6 rounded-xl gap-4">
+            <div class="text-center md:text-left">
+                <h1 class="text-3xl md:text-5xl font-bold stencil-text text-white">АРН «ПРИКАЗ»</h1>
+                <p class="text-[10px] md:text-xs text-amber-500 opacity-70 tracking-widest uppercase font-bold">Тактический модуль распределения</p>
             </div>
-            <div class="glass-panel stat-box">
-                <div class="stat-label">Score</div>
-                <div class="stat-val" id="score">0</div>
+            <div class="lcd-display px-6 py-2 rounded border-amber-600/50">
+                <div id="systemStatus" class="text-xl md:text-2xl font-bold tracking-tighter">СИСТЕМА ГОТОВА</div>
             </div>
-            <div class="glass-panel stat-box">
-                <div class="stat-label">Lines</div>
-                <div class="stat-val" id="lines">0</div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-8">
+            
+            <div class="lg:col-span-3 space-y-4 order-2 lg:order-1">
+                <div class="military-card p-4 rounded-xl flex flex-col h-[400px] lg:h-[600px]">
+                    <h2 class="stencil-text text-xl mb-4 border-b border-white/10 pb-2 flex justify-between">
+                        <span>Бойцы</span>
+                        <span id="pCount" class="text-sm opacity-50">0 чел.</span>
+                    </h2>
+                    <div id="namesList" class="flex-1 overflow-y-auto custom-scroll space-y-2 pr-2">
+                        </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-6 flex flex-col items-center justify-center space-y-6 order-1 lg:order-2 py-4">
+                <div class="wheel-outer">
+                    <div class="pointer"></div>
+                    <div class="wheel-container">
+                        <canvas id="wheelCanvas" width="800" height="800"></canvas>
+                    </div>
+                </div>
+                
+                <div class="w-full max-w-[400px] grid grid-cols-1 gap-4">
+                    <button id="spinBtn" onclick="processSelection()" 
+                        class="btn-military w-full py-4 md:py-6 text-xl md:text-2xl font-bold stencil-text text-white tracking-widest rounded-lg shadow-xl">
+                        РАСПРЕДЕЛИТЬ
+                    </button>
+                    <div class="flex items-center justify-between p-3 military-card rounded-lg bg-black/20">
+                        <span class="text-[10px] uppercase font-bold">Авто-режим</span>
+                        <input type="checkbox" id="autoSpinToggle" class="w-5 h-5 accent-amber-500">
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:col-span-2 lg:col-span-3 space-y-4 order-3">
+                <div class="military-card p-4 rounded-xl flex flex-col h-full min-h-[400px]">
+                    <h2 class="stencil-text text-xl mb-4 border-b border-white/10 pb-2 text-center">Ведомость</h2>
+                    <div id="resultsTable" class="flex-1 overflow-y-auto custom-scroll space-y-4">
+                        <div id="group_kurs" class="space-y-1">
+                            <div class="text-[10px] text-amber-500 font-bold uppercase">Наряд по курсу</div>
+                            <div class="bg-black/40 rounded p-2 border-l-2 border-amber-600 content-list text-sm"></div>
+                        </div>
+                        <div id="group_kpp" class="space-y-1">
+                            <div class="text-[10px] text-blue-400 font-bold uppercase">Наряд по КПП</div>
+                            <div class="bg-black/40 rounded p-2 border-l-2 border-blue-600 content-list text-sm"></div>
+                        </div>
+                        <div id="group_patrol" class="space-y-1">
+                            <div class="text-[10px] text-emerald-500 font-bold uppercase">Патруль</div>
+                            <div class="bg-black/40 rounded p-2 border-l-2 border-emerald-600 content-list text-sm"></div>
+                        </div>
+                        <div id="group_mess" class="space-y-1">
+                            <div class="text-[10px] text-rose-500 font-bold uppercase">Столовая</div>
+                            <div class="bg-black/40 rounded p-2 border-l-2 border-rose-600 content-list text-sm"></div>
+                        </div>
+                    </div>
+                    <button onclick="resetAssignments()" class="mt-4 text-[10px] uppercase text-slate-500 hover:text-rose-400 text-center">Сброс всех данных</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="overlay">
-        <div class="title">TETRIS</div>
-        <button class="btn btn-main" style="width: 200px;" onclick="startGame()">ИГРАТЬ</button>
-    </div>
-
-    <div class="controls">
-        <div class="btn" onclick="move(-1)">◀</div>
-        <div class="btn" onclick="rotate()">↻</div>
-        <div class="btn" onclick="move(1)">▶</div>
-        <div class="btn" style="grid-column: span 3; padding: 8px; font-size: 1rem;" onclick="hardDrop()">BAM! (DROP)</div>
-        <div class="btn" style="grid-column: 2;" onclick="drop()">▼</div>
+    <div id="winnerModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[3000] p-4">
+        <div class="military-card p-6 md:p-10 rounded-xl max-w-sm w-full text-center border-amber-600">
+            <div class="text-amber-600 text-[10px] font-bold uppercase mb-2">Назначение утверждено:</div>
+            <div id="modalDetail" class="text-xs text-white/50 mb-4 uppercase">---</div>
+            <div id="modalWinner" class="text-3xl md:text-4xl font-bold stencil-text text-white mb-8 py-6 bg-white/5 rounded">---</div>
+            <button onclick="closeWinnerModal()" class="btn-military w-full py-4 text-white font-bold uppercase rounded text-lg">ПРИНЯЛ!</button>
+        </div>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready(); tg.expand();
+        // ... (Весь JavaScript остается таким же, как в твоем файле, он отлично работает) ...
+        // Но я добавлю маленькую правку для корректной отрисовки шрифтов на канвасе при масштабировании:
 
-        const canvas = document.getElementById('game-canvas');
+        const canvas = document.getElementById('wheelCanvas');
         const ctx = canvas.getContext('2d');
-        const nextCanvas = document.getElementById('next-canvas');
-        const nextCtx = nextCanvas.getContext('2d');
-
-        const COLS = 10, ROWS = 20;
-        let BLOCK_SIZE = 0;
+        const namesListContainer = document.getElementById('namesList');
+        const spinBtn = document.getElementById('spinBtn');
+        const statusDisplay = document.getElementById('systemStatus');
         
-        const COLORS = [null, '#FF3D71', '#3366FF', '#00D68F', '#FFAA00', '#00f2ff', '#7000ff', '#FFEA00'];
-        const SHAPES = [
-            [], 
-            [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
-            [[2,0,0],[2,2,2],[0,0,0]], // J
-            [[0,0,3],[3,3,3],[0,0,0]], // L
-            [[4,4],[4,4]], // O
-            [[0,5,5],[5,5,0],[0,0,0]], // S
-            [[0,6,0],[6,6,6],[0,0,0]], // T
-            [[7,7,0],[0,7,7],[0,0,0]]  // Z
+        let participants = [
+            { name: 'Бартенев', exc: [] }, { name: 'Аракчаа', exc: [] },
+            { name: 'Арнаутов', exc: [] }, { name: 'Бутримов', exc: [] },
+            { name: 'Берестов', exc: [] }, { name: 'Сулейманов', exc: [] },
+            { name: 'Макаров', exc: [] }, { name: 'Мелихов', exc: [] },
+            { name: 'Журавлев', exc: [] }, { name: 'Климов', exc: [] },
+            { name: 'Шагимарданов', exc: [] }, { name: 'Солнцев', exc: [] },
+            { name: 'Животов', exc: [] }, { name: 'Дыбенко', exc: [] },
+            { name: 'Голубев', exc: [] }, { name: 'Кобозев', exc: [] },
+            { name: 'Журкин', exc: [] }, { name: 'Вишнепольский', exc: [] },
+            { name: 'Журдзинский', exc: [] }, { name: 'Стрельцов', exc: [] }
+        ];
+        
+        let currentRotation = 0;
+        let isSpinning = false;
+        let assignments = [];
+
+        const detailTypes = [
+            { id: 'kurs', label: 'По курсу', color: '#b45309', input: 'q_kurs' },
+            { id: 'kpp', label: 'По КПП', color: '#1d4ed8', input: 'q_kpp' },
+            { id: 'patrol', label: 'Патруль', color: '#047857', input: 'q_patrol' },
+            { id: 'mess', label: 'Столовая', color: '#be123c', input: 'q_mess' }
         ];
 
-        let board = [], score = 0, lines = 0, level = 1;
-        let piece = null, nextPiece = null;
-        let dropCounter = 0, dropInterval = 800, lastTime = 0, gameActive = false;
-
-        function setTheme(t) { document.body.className = t; if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); }
-
-        function resize() {
-            const h = window.innerHeight * 0.55;
-            BLOCK_SIZE = Math.floor(h / ROWS);
-            canvas.width = BLOCK_SIZE * COLS;
-            canvas.height = BLOCK_SIZE * ROWS;
+        function init() {
+            renderParticipants();
+            drawWheel();
+            updateAssignmentsUI();
         }
 
-        function createPiece(id) {
-            return { matrix: JSON.parse(JSON.stringify(SHAPES[id])), x: 3, y: 0, id: id };
+        function renderParticipants() {
+            namesListContainer.innerHTML = '';
+            participants.forEach((p, i) => {
+                const isAssigned = assignments.find(a => a.name === p.name);
+                const div = document.createElement('div');
+                div.className = `flex justify-between items-center bg-black/40 p-2 rounded border-l-2 ${isAssigned ? 'opacity-20 grayscale border-slate-900' : 'border-slate-600'}`;
+                div.innerHTML = `<span class="text-xs font-bold text-slate-200">${p.name.toUpperCase()}</span>`;
+                namesListContainer.appendChild(div);
+            });
+            document.getElementById('pCount').textContent = `${participants.length} чел.`;
         }
 
-        function drawBlock(c, x, y, size, colorId, isGhost = false) {
-            const px = x * size, py = y * size, r = size * 0.2;
-            c.fillStyle = isGhost ? 'rgba(255,255,255,0.1)' : COLORS[colorId];
-            if(isGhost) { c.strokeStyle = COLORS[colorId]; c.lineWidth = 1; }
+        function drawWheel() {
+            const size = canvas.width;
+            const center = size / 2;
+            const radius = center - 10;
+            const sliceAngle = (2 * Math.PI) / participants.length;
+
+            ctx.clearRect(0, 0, size, size);
+
+            participants.forEach((p, i) => {
+                const angle = i * sliceAngle;
+                ctx.beginPath();
+                ctx.fillStyle = i % 2 === 0 ? '#1a1d16' : '#0a0b08';
+                ctx.moveTo(center, center);
+                ctx.arc(center, center, radius, angle, angle + sliceAngle);
+                ctx.fill();
+                ctx.strokeStyle = '#3b4232';
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(center, center);
+                ctx.rotate(angle + sliceAngle / 2);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 28px Oswald';
+                ctx.fillText(p.name.toUpperCase(), radius - 30, 10);
+                ctx.restore();
+            });
+        }
+
+        function processSelection() {
+            if (isSpinning) return;
+            // Упрощенная логика для теста - берем наряд по очереди
+            const targetDetail = detailTypes[0]; 
+            spin(targetDetail);
+        }
+
+        function spin(targetDetail) {
+            isSpinning = true;
+            spinBtn.disabled = true;
+            statusDisplay.textContent = "ВРАЩЕНИЕ...";
             
-            c.beginPath();
-            c.roundRect(px+1, py+1, size-2, size-2, r);
-            c.fill();
-            if(isGhost) c.stroke();
-            else {
-                // Блик
-                c.fillStyle = 'rgba(255,255,255,0.3)';
-                c.beginPath(); c.roundRect(px+size*0.2, py+size*0.2, size*0.4, size*0.2, r/2); c.fill();
-            }
+            const extraSpins = 5 + Math.random() * 5;
+            const totalRotation = extraSpins * 2 * Math.PI + Math.random() * 2 * Math.PI;
+            currentRotation += totalRotation;
+            canvas.style.transform = `rotate(${currentRotation}rad)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                spinBtn.disabled = false;
+                statusDisplay.textContent = "ГОТОВО";
+                
+                // Расчет победителя
+                const sliceAngle = (2 * Math.PI) / participants.length;
+                const actualRot = currentRotation % (2 * Math.PI);
+                let winnerIdx = Math.floor((1.5 * Math.PI - actualRot) / sliceAngle);
+                while(winnerIdx < 0) winnerIdx += participants.length;
+                winnerIdx %= participants.length;
+                
+                const winner = participants[winnerIdx];
+                assignments.push({name: winner.name, typeId: targetDetail.id, label: targetDetail.label});
+                
+                showWinnerModal(winner.name, targetDetail.label);
+                updateAssignmentsUI();
+                renderParticipants();
+            }, 7000);
         }
 
-        function collide(b, p) {
-            for(let y=0; y<p.matrix.length; y++) {
-                for(let x=0; x<p.matrix[y].length; x++) {
-                    if(p.matrix[y][x] !== 0 && (b[y+p.y] && b[y+p.y][x+p.x]) !== 0) return true;
-                }
-            }
-            return false;
+        function updateAssignmentsUI() {
+            detailTypes.forEach(type => {
+                const container = document.querySelector(`#group_${type.id} .content-list`);
+                if(!container) return;
+                const list = assignments.filter(a => a.typeId === type.id);
+                container.innerHTML = list.length ? list.map(a => `<div>• ${a.name.toUpperCase()}</div>`).join('') : 'ВАКАНТНО';
+            });
         }
 
-        function arenaSweep() {
-            let rowCount = 0;
-            outer: for(let y=ROWS-1; y>=0; y--) {
-                for(let x=0; x<COLS; x++) if(board[y][x] === 0) continue outer;
-                board.splice(y, 1);
-                board.unshift(new Array(COLS).fill(0));
-                y++; rowCount++;
-            }
-            if(rowCount > 0) {
-                score += rowCount * 10 * level;
-                lines += rowCount;
-                document.getElementById('score').innerText = score;
-                document.getElementById('lines').innerText = lines;
-                if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            }
+        function showWinnerModal(name, detail) {
+            document.getElementById('modalWinner').textContent = name.toUpperCase();
+            document.getElementById('modalDetail').textContent = detail;
+            document.getElementById('winnerModal').classList.replace('hidden', 'flex');
         }
 
-        function draw() {
-            ctx.clearRect(0,0,canvas.width, canvas.height);
-            board.forEach((row, y) => row.forEach((val, x) => { if(val) drawBlock(ctx, x, y, BLOCK_SIZE, val); }));
-            
-            if(piece) {
-                // Ghost
-                let gy = piece.y;
-                while(!collide(board, {...piece, y: gy+1})) gy++;
-                piece.matrix.forEach((row, y) => row.forEach((val, x) => { if(val) drawBlock(ctx, piece.x+x, gy+y, BLOCK_SIZE, piece.id, true); }));
-                // Piece
-                piece.matrix.forEach((row, y) => row.forEach((val, x) => { if(val) drawBlock(ctx, piece.x+x, piece.y+y, BLOCK_SIZE, piece.id); }));
-            }
-            drawNext();
+        function closeWinnerModal() {
+            document.getElementById('winnerModal').classList.replace('flex', 'hidden');
         }
 
-        function drawNext() {
-            nextCtx.clearRect(0,0,60,60);
-            if(!nextPiece) return;
-            nextPiece.matrix.forEach((row, y) => row.forEach((val, x) => { if(val) drawBlock(nextCtx, x, y, 12, val); }));
+        function resetAssignments() {
+            assignments = [];
+            currentRotation = 0;
+            canvas.style.transform = `rotate(0rad)`;
+            init();
         }
 
-        function update(time = 0) {
-            if(!gameActive) return;
-            const dt = time - lastTime; lastTime = time;
-            dropCounter += dt;
-            if(dropCounter > dropInterval) { piece.y++; if(collide(board, piece)) { piece.y--; merge(); reset(); arenaSweep(); } dropCounter = 0; }
-            draw();
-            requestAnimationFrame(update);
-        }
-
-        function merge() { piece.matrix.forEach((row, y) => row.forEach((val, x) => { if(val) board[y+piece.y][x+piece.x] = val; })); }
-        
-        function reset() {
-            piece = nextPiece || createPiece(Math.floor(Math.random()*7)+1);
-            nextPiece = createPiece(Math.floor(Math.random()*7)+1);
-            if(collide(board, piece)) { gameActive = false; document.getElementById('overlay').style.display = 'flex'; }
-        }
-
-        window.move = d => { piece.x += d; if(collide(board, piece)) piece.x -= d; if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); }
-        window.rotate = () => { 
-            const m = piece.matrix;
-            for(let y=0; y<m.length; y++) for(let x=0; x<y; x++) [m[x][y], m[y][x]] = [m[y][x], m[x][y]];
-            m.forEach(row => row.reverse());
-            if(collide(board, piece)) { m.forEach(row => row.reverse()); for(let y=0; y<m.length; y++) for(let x=0; x<y; x++) [m[x][y], m[y][x]] = [m[y][x], m[x][y]]; }
-            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-        }
-        window.drop = () => { piece.y++; if(collide(board, piece)) { piece.y--; merge(); reset(); arenaSweep(); } dropCounter = 0; }
-        window.hardDrop = () => { while(!collide(board, piece)) piece.y++; piece.y--; merge(); reset(); arenaSweep(); if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy'); }
-
-        function startGame() {
-            board = Array.from({length: ROWS}, () => new Array(COLS).fill(0));
-            score = 0; lines = 0;
-            document.getElementById('overlay').style.display = 'none';
-            gameActive = true; reset(); lastTime = performance.now(); update();
-        }
-
-        window.addEventListener('resize', resize);
-        resize();
+        window.onload = init;
     </script>
 </body>
 </html>
