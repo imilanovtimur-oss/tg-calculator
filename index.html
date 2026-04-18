@@ -3,118 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pro Calc</title>
+    <title>Glass Calc Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* Базовые настройки тем */
         :root {
-            --bg-color: var(--tg-theme-bg-color, #f5f5f7);
-            --text-color: var(--tg-theme-text-color, #000000);
-            --accent-color: #007aff; /* Синий как в iOS */
-            --secondary-bg: var(--tg-theme-secondary-bg-color, #ffffff);
-            --button-bg: #ffffff;
+            --bg-gradient: linear-gradient(45deg, #1e3a8a, #3b82f6);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-color: #ffffff;
+            --accent-color: #ffffff;
         }
 
+        .theme-blue { --bg-gradient: linear-gradient(135deg, #0f172a, #1e40af); }
+        .theme-purple { --bg-gradient: linear-gradient(135deg, #2e1065, #7c3aed); }
+        .theme-green { --bg-gradient: linear-gradient(135deg, #064e3b, #10b981); }
+        .theme-dark { --bg-gradient: linear-gradient(135deg, #000000, #4b5563); }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
-            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--bg-gradient);
+            transition: background 0.5s ease;
+            color: var(--text-color);
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Выбор темы */
+        .theme-selector {
             display: flex;
             justify-content: center;
-            align-items: flex-end; /* Калькулятор будет внизу, как на iPhone */
-            height: 100vh;
-            overflow: hidden;
-            user-select: none; /* Запрещаем выделение текста (убирает синие рамки) */
-            -webkit-tap-highlight-color: transparent; /* Убирает блик при нажатии */
+            gap: 15px;
+            padding: 20px 0 10px;
+        }
+
+        .theme-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
         .calc-wrapper {
             width: 100%;
             max-width: 400px;
+            margin: auto auto 20px;
             padding: 20px;
             box-sizing: border-box;
-            background: var(--bg-color);
         }
 
         #display-container {
-            padding: 20px;
             text-align: right;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            min-height: 120px;
-        }
-
-        #history {
-            font-size: 1.2rem;
-            color: var(--tg-theme-hint-color, #8e8e93);
-            margin-bottom: 8px;
-            height: 1.4rem;
+            padding: 20px;
+            margin-bottom: 10px;
         }
 
         #display {
-            font-size: 4rem;
+            font-size: 4.5rem;
             font-weight: 200;
             margin: 0;
-            overflow-x: auto;
-            white-space: nowrap;
+            text-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
         .grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            padding-bottom: 30px;
+            gap: 15px;
         }
 
         button {
-            aspect-ratio: 1 / 1; /* Делает кнопки идеально квадратными */
-            border: none;
-            border-radius: 50%; /* Круглые кнопки как в iOS */
-            font-size: 1.6rem;
-            font-weight: 400;
+            aspect-ratio: 1/1;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 300;
             cursor: pointer;
-            background-color: var(--secondary-bg);
-            color: var(--text-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.1s, brightness 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
         button:active {
             transform: scale(0.9);
-            filter: brightness(0.8);
+            background: rgba(255, 255, 255, 0.3);
         }
 
         button.operator {
-            background-color: var(--accent-color);
-            color: white;
-            font-size: 1.8rem;
+            background: rgba(255, 255, 255, 0.25);
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.4);
         }
 
-        button.special {
-            background-color: #d1d1d6;
-            color: black;
-        }
-
-        /* Темная тема для спец-кнопок */
-        @media (prefers-color-scheme: dark) {
-            button.special { background-color: #3a3a3c; color: white; }
-        }
-
-        .double {
+        button.double {
             grid-column: span 2;
             aspect-ratio: auto;
-            border-radius: 40px;
-            padding-left: 25px;
-            justify-content: flex-start;
+        }
+
+        #history {
+            height: 20px;
+            font-size: 1.1rem;
+            opacity: 0.6;
+            margin-bottom: 5px;
         }
     </style>
 </head>
-<body>
+<body class="theme-blue">
+
+<div class="theme-selector">
+    <div class="theme-dot" style="background: #1e40af;" onclick="setTheme('theme-blue')"></div>
+    <div class="theme-dot" style="background: #7c3aed;" onclick="setTheme('theme-purple')"></div>
+    <div class="theme-dot" style="background: #10b981;" onclick="setTheme('theme-green')"></div>
+    <div class="theme-dot" style="background: #333333;" onclick="setTheme('theme-dark')"></div>
+</div>
 
 <div class="calc-wrapper">
     <div id="display-container">
@@ -123,9 +132,9 @@
     </div>
     
     <div class="grid">
-        <button class="special" onclick="clearAll()">AC</button>
-        <button class="special" onclick="deleteLast()">⌫</button>
-        <button class="special" onclick="append('%')">%</button>
+        <button class="operator" onclick="clearAll()">AC</button>
+        <button class="operator" onclick="deleteLast()">⌫</button>
+        <button class="operator" onclick="append('%')">%</button>
         <button class="operator" onclick="append('/')">÷</button>
 
         <button onclick="append('7')">7</button>
@@ -145,7 +154,7 @@
 
         <button onclick="append('0')" class="double">0</button>
         <button onclick="append('.')">.</button>
-        <button class="operator" onclick="calculate()">=</button>
+        <button class="operator" style="background: white; color: black;" onclick="calculate()">=</button>
     </div>
 </div>
 
@@ -156,16 +165,21 @@
 
     tg.ready();
     tg.expand();
+    tg.setHeaderColor('#000000'); // Пытаемся сделать шапку темной
 
     let currentInput = '';
 
+    function setTheme(themeName) {
+        document.body.className = themeName;
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+    }
+
     function updateDisplay() {
         display.innerText = currentInput || '0';
-        // Авто-уменьшение шрифта если число длинное
-        if (currentInput.length > 7) {
+        if (currentInput.length > 8) {
             display.style.fontSize = '2.5rem';
         } else {
-            display.style.fontSize = '4rem';
+            display.style.fontSize = '4.5rem';
         }
     }
 
@@ -190,16 +204,13 @@
     function calculate() {
         try {
             if (!currentInput) return;
-            const expression = currentInput.replace('×', '*').replace('÷', '/');
-            const result = Number(eval(expression).toFixed(8)); // Округляем до 8 знаков
-            
+            const res = eval(currentInput.replace('×', '*').replace('÷', '/'));
             historyDiv.innerText = currentInput + ' =';
-            currentInput = result.toString();
+            currentInput = Number(res.toFixed(8)).toString();
             updateDisplay();
-
             if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
         } catch (e) {
-            display.innerText = 'Ошибка';
+            display.innerText = 'Error';
             setTimeout(clearAll, 1000);
         }
     }
