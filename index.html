@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TG Calculator</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Используем переменные темы Telegram для дизайна */
+        body {
+            --bg-color: var(--tg-theme-bg-color, #ffffff);
+            --text-color: var(--tg-theme-text-color, #000000);
+            --button-color: var(--tg-theme-button-color, #2481cc);
+            --button-text: var(--tg-theme-button-text-color, #ffffff);
+            --hint-color: var(--tg-theme-hint-color, #999999);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #f4f4f5);
+
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .calc-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #display {
+            width: 100%;
+            height: 80px;
+            font-size: 3rem;
+            text-align: right;
+            border: none;
+            background: transparent;
+            color: var(--text-color);
+            margin-bottom: 20px;
+            outline: none;
+            font-weight: 300;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1-fr);
+            gap: 12px;
+            flex: 1;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            font-size: 1.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.1s, transform 0.1s;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        button:active {
+            opacity: 0.7;
+            transform: scale(0.95);
+        }
+
+        button.operator {
+            background-color: var(--button-color);
+            color: var(--button-text);
+        }
+
+        button.double {
+            grid-column: span 2;
+        }
+
+        .history {
+            font-size: 1rem;
+            color: var(--hint-color);
+            text-align: right;
+            min-height: 1.2rem;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calc-container">
+    <div class="history" id="history"></div>
+    <input type="text" id="display" placeholder="0" readonly>
+    
+    <div class="grid">
+        <button onclick="clearAll()" style="color: #ff3b30;">AC</button>
+        <button onclick="deleteLast()">DEL</button>
+        <button onclick="append('%')" class="operator">%</button>
+        <button onclick="append('/')" class="operator">÷</button>
+
+        <button onclick="append('7')">7</button>
+        <button onclick="append('8')">8</button>
+        <button onclick="append('9')">9</button>
+        <button onclick="append('*')" class="operator">×</button>
+
+        <button onclick="append('4')">4</button>
+        <button onclick="append('5')">5</button>
+        <button onclick="append('6')">6</button>
+        <button onclick="append('-')" class="operator">−</button>
+
+        <button onclick="append('1')">1</button>
+        <button onclick="append('2')">2</button>
+        <button onclick="append('3')">3</button>
+        <button onclick="append('+')" class="operator">+</button>
+
+        <button onclick="append('0')" class="double">0</button>
+        <button onclick="append('.')">.</button>
+        <button onclick="calculate()" class="operator">=</button>
+    </div>
+</div>
+
+<script>
+    // Инициализация Telegram WebApp
+    const tg = window.Telegram.WebApp;
+    const display = document.getElementById('display');
+    const historyDiv = document.getElementById('history');
+
+    // Сообщаем Telegram, что приложение готово и разворачиваем его
+    tg.ready();
+    tg.expand();
+
+    // Устанавливаем цвет хедера в тон темы
+    tg.setHeaderColor('secondary_bg_color');
+
+    let currentInput = '';
+
+    function updateDisplay() {
+        display.value = currentInput || '0';
+    }
+
+    function append(char) {
+        // Легкая вибрация при нажатии (только в мобильном ТГ)
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        
+        currentInput += char;
+        updateDisplay();
+    }
+
+    function clearAll() {
+        currentInput = '';
+        historyDiv.innerText = '';
+        updateDisplay();
+    }
+
+    function deleteLast() {
+        currentInput = currentInput.slice(0, -1);
+        updateDisplay();
+    }
+
+    function calculate() {
+        try {
+            if (!currentInput) return;
+            
+            // Заменяем символы для корректного вычисления в JS
+            const expression = currentInput.replace('×', '*').replace('÷', '/');
+            const result = eval(expression);
+            
+            historyDiv.innerText = currentInput + ' =';
+            currentInput = result.toString();
+            updateDisplay();
+
+            // Показываем кнопку "Отправить результат" в самом Telegram
+            tg.MainButton.setText("ОТПРАВИТЬ РЕЗУЛЬТАТ: " + result);
+            tg.MainButton.show();
+            
+            // Если нажать на кнопку ТГ - данные уйдут боту
+            tg.MainButton.onClick(() => {
+                tg.sendData(result.toString()); 
+            });
+
+        } catch (e) {
+            display.value = 'Ошибка';
+            setTimeout(clearAll, 1500);
+        }
+    }
+</script>
+
+</body>
+</html>
