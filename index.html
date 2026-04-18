@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Cartoon Tetris</title>
+    <title>Modern Cartoon Tetris</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #1a1a2e;
-            --panel-bg: rgba(255, 255, 255, 0.1);
-            --text-color: #ffffff;
+            --bg-color: #0f172a;
+            --accent: #00f2ff;
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.15);
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0;
-            background: var(--bg-color);
-            color: var(--text-color);
-            height: 100vh;
+            background: radial-gradient(circle at top, #1e293b, #0f172a);
+            color: white;
             height: 100dvh;
             display: flex;
             flex-direction: column;
@@ -26,76 +26,125 @@
             touch-action: none;
         }
 
+        /* Шапка с рекордами */
+        .header {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            border-radius: 0 0 20px 20px;
+        }
+
+        .stat-card {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            opacity: 0.6;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        /* Игровое поле */
         #game-container {
             flex: 1;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 10px;
-            position: relative;
-        }
-
-        .stats {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 10px;
-            font-weight: bold;
-            font-size: 1.2rem;
-            background: var(--panel-bg);
-            padding: 5px 20px;
-            border-radius: 20px;
-            backdrop-filter: blur(5px);
         }
 
         canvas {
-            border: 4px solid #30475e;
-            border-radius: 15px;
-            background: #16213e;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            max-height: 60vh;
+            border: 6px solid var(--border);
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
-        /* Кнопки управления для мобилок */
+        /* Управление */
         .controls {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            gap: 12px;
             padding: 20px;
-            padding-bottom: calc(20px + env(safe-area-inset-bottom));
+            padding-bottom: calc(25px + env(safe-area-inset-bottom));
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 30px 30px 0 0;
+            border-top: 1px solid var(--border);
         }
 
         .btn {
-            background: var(--panel-bg);
-            border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
             color: white;
-            border-radius: 15px;
-            padding: 15px;
-            font-size: 1.5rem;
+            border-radius: 20px;
+            padding: 18px;
+            font-size: 1.8rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(10px);
-            transition: transform 0.1s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.1s;
         }
 
         .btn:active {
             transform: scale(0.9);
-            background: rgba(255,255,255,0.3);
+            background: var(--accent);
+            color: #000;
         }
 
-        .btn-rotate { grid-column: 2; background: rgba(255, 165, 0, 0.4); }
-        .btn-down { grid-column: 2; }
+        .btn-rotate { 
+            grid-column: 2; 
+            background: linear-gradient(45deg, #00f2ff, #7000ff);
+            border: none;
+        }
+
+        /* Окно Game Over */
+        #game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 30px;
+            border-radius: 25px;
+            text-align: center;
+            border: 2px solid var(--accent);
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div class="stats">
-        <div>Score: <span id="score">0</span></div>
-        <div>Level: <span id="level">1</span></div>
+<div class="header">
+    <div class="stat-card">
+        <div class="stat-label">Счет</div>
+        <div class="stat-value" id="score">0</div>
     </div>
+    <div class="stat-card">
+        <div class="stat-label">Рекорд</div>
+        <div class="stat-value" id="highscore">0</div>
+    </div>
+</div>
+
+<div id="game-container">
     <canvas id="tetris"></canvas>
+    <div id="game-over">
+        <h2 style="margin: 0; color: var(--accent);">GAME OVER</h2>
+        <p>Ваш счет: <span id="final-score">0</span></p>
+        <button class="btn" style="font-size: 1rem; padding: 10px 20px;" onclick="resetGame()">Играть снова</button>
+    </div>
 </div>
 
 <div class="controls">
@@ -103,7 +152,7 @@
     <div class="btn btn-rotate" onclick="rotate()">↻</div>
     <div class="btn" onclick="move(1)">▶</div>
     <div></div>
-    <div class="btn btn-down" onclick="drop()">▼</div>
+    <div class="btn" onclick="drop()">▼</div>
     <div></div>
 </div>
 
@@ -115,61 +164,61 @@
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
     const scoreElement = document.getElementById('score');
-    const levelElement = document.getElementById('level');
+    const highscoreElement = document.getElementById('highscore');
 
-    // Настройка размеров под экран
+    let highscore = localStorage.getItem('tetris-high-score') || 0;
+    highscoreElement.innerText = highscore;
+
     const ROWS = 20;
     const COLS = 10;
-    const BLOCK_SIZE = Math.min(window.innerWidth * 0.08, window.innerHeight * 0.03);
+    const BLOCK_SIZE = Math.min(window.innerWidth * 0.08, window.innerHeight * 0.035);
     canvas.width = COLS * BLOCK_SIZE;
     canvas.height = ROWS * BLOCK_SIZE;
-    context.scale(1, 1);
 
-    // Цвета для мультяшных блоков
     const COLORS = [
         null,
-        '#FF006E', // T
-        '#FB5607', // O
-        '#FFBE0B', // L
-        '#8AC926', // J
-        '#3A86FF', // I
-        '#FF006E', // S
-        '#8338EC'  // Z
+        '#FF3D71', // Redish
+        '#3366FF', // Blue
+        '#00D68F', // Green
+        '#FFAA00', // Orange
+        '#00f2ff', // Cyan
+        '#7000ff', // Purple
+        '#FFEA00'  // Yellow
     ];
 
-    function createPiece(type) {
-        if (type === 'T') return [[0, 1, 0], [1, 1, 1], [0, 0, 0]];
-        if (type === 'O') return [[2, 2], [2, 2]];
-        if (type === 'L') return [[0, 0, 3], [3, 3, 3], [0, 0, 0]];
-        if (type === 'J') return [[4, 0, 0], [4, 4, 4], [0, 0, 0]];
-        if (type === 'I') return [[0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0]];
-        if (type === 'S') return [[0, 6, 6], [6, 6, 0], [0, 0, 0]];
-        if (type === 'Z') return [[7, 7, 0], [0, 7, 7], [0, 0, 0]];
-    }
-
-    // Рисование блока в "мультяшном" стиле
     function drawBlock(x, y, colorIndex) {
         const xPos = x * BLOCK_SIZE;
         const yPos = y * BLOCK_SIZE;
-        const radius = 6;
+        const r = 8; // Скругление
 
-        context.fillStyle = COLORS[colorIndex];
-        // Скругленный прямоугольник
+        // Тень
+        context.shadowColor = 'rgba(0,0,0,0.3)';
+        context.shadowBlur = 10;
+        
+        // Основной цвет с градиентом
+        const grad = context.createLinearGradient(xPos, yPos, xPos + BLOCK_SIZE, yPos + BLOCK_SIZE);
+        grad.addColorStop(0, COLORS[colorIndex]);
+        grad.addColorStop(1, adjustColor(COLORS[colorIndex], -40));
+        
+        context.fillStyle = grad;
         context.beginPath();
-        context.roundRect(xPos + 1, yPos + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2, radius);
+        context.roundRect(xPos + 2, yPos + 2, BLOCK_SIZE - 4, BLOCK_SIZE - 4, r);
         context.fill();
 
-        // Блик для объема
-        context.fillStyle = 'rgba(255,255,255,0.3)';
+        // Блик для эффекта леденца
+        context.shadowBlur = 0;
+        context.fillStyle = 'rgba(255,255,255,0.4)';
         context.beginPath();
-        context.roundRect(xPos + 4, yPos + 4, BLOCK_SIZE / 2, 4, 2);
+        context.roundRect(xPos + 6, yPos + 6, BLOCK_SIZE/3, 5, 2);
         context.fill();
     }
 
-    function draw() {
-        context.fillStyle = '#16213e';
-        context.fillRect(0, 0, canvas.width, canvas.height);
+    function adjustColor(hex, amt) {
+        return hex; // Упрощено для стабильности, можно добавить функцию осветления
+    }
 
+    function draw() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
         drawMatrix(arena, {x: 0, y: 0});
         drawMatrix(player.matrix, player.pos);
     }
@@ -177,15 +226,13 @@
     function drawMatrix(matrix, offset) {
         matrix.forEach((row, y) => {
             row.forEach((value, x) => {
-                if (value !== 0) {
-                    drawBlock(x + offset.x, y + offset.y, value);
-                }
+                if (value !== 0) drawBlock(x + offset.x, y + offset.y, value);
             });
         });
     }
 
     function arenaSweep() {
-        let rowCount = 1;
+        let linesCleared = 0;
         outer: for (let y = arena.length - 1; y > 0; --y) {
             for (let x = 0; x < arena[y].length; ++x) {
                 if (arena[y][x] === 0) continue outer;
@@ -193,40 +240,51 @@
             const row = arena.splice(y, 1)[0].fill(0);
             arena.unshift(row);
             ++y;
-            player.score += rowCount * 10;
-            rowCount *= 2;
+            linesCleared++;
+        }
+        if (linesCleared > 0) {
+            player.score += [0, 10, 30, 50, 100][linesCleared];
+            updateScore();
             if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
         }
+    }
+
+    function updateScore() {
         scoreElement.innerText = player.score;
-        levelElement.innerText = Math.floor(player.score / 100) + 1;
+        if (player.score > highscore) {
+            highscore = player.score;
+            localStorage.setItem('tetris-high-score', highscore);
+            highscoreElement.innerText = highscore;
+        }
     }
 
     function collide(arena, player) {
         const [m, o] = [player.matrix, player.pos];
         for (let y = 0; y < m.length; ++y) {
             for (let x = 0; x < m[y].length; ++x) {
-                if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) {
-                    return true;
-                }
+                if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
             }
         }
         return false;
     }
 
     function createArena(w, h) {
-        const matrix = [];
-        while (h--) matrix.push(new Array(w).fill(0));
-        return matrix;
+        return Array.from({length: h}, () => new Array(w).fill(0));
     }
 
     function merge(arena, player) {
         player.matrix.forEach((row, y) => {
             row.forEach((value, x) => {
-                if (value !== 0) {
-                    arena[y + player.pos.y][x + player.pos.x] = value;
-                }
+                if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
             });
         });
+    }
+
+    function rotateMatrix(matrix, dir) {
+        for (let y = 0; y < matrix.length; ++y) {
+            for (let x = 0; x < y; ++x) [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+        }
+        if (dir > 0) matrix.forEach(row => row.reverse()); else matrix.reverse();
     }
 
     function playerDrop() {
@@ -236,44 +294,30 @@
             merge(arena, player);
             playerReset();
             arenaSweep();
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
         }
         dropCounter = 0;
     }
 
     function playerMove(dir) {
         player.pos.x += dir;
-        if (collide(arena, player)) {
-            player.pos.x -= dir;
-        } else if (tg.HapticFeedback) {
-            tg.HapticFeedback.impactOccurred('light');
-        }
+        if (collide(arena, player)) player.pos.x -= dir;
+        else if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
     }
 
-    function playerRotate(dir) {
+    function playerRotate() {
         const pos = player.pos.x;
         let offset = 1;
-        rotateMatrix(player.matrix, dir);
+        rotateMatrix(player.matrix, 1);
         while (collide(arena, player)) {
             player.pos.x += offset;
             offset = -(offset + (offset > 0 ? 1 : -1));
             if (offset > player.matrix[0].length) {
-                rotateMatrix(player.matrix, -dir);
+                rotateMatrix(player.matrix, -1);
                 player.pos.x = pos;
                 return;
             }
         }
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-    }
-
-    function rotateMatrix(matrix, dir) {
-        for (let y = 0; y < matrix.length; ++y) {
-            for (let x = 0; x < y; ++x) {
-                [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
-            }
-        }
-        if (dir > 0) matrix.forEach(row => row.reverse());
-        else matrix.reverse();
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
     }
 
     function playerReset() {
@@ -282,51 +326,63 @@
         player.pos.y = 0;
         player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
         if (collide(arena, player)) {
-            arena.forEach(row => row.fill(0));
-            player.score = 0;
-            scoreElement.innerText = 0;
+            document.getElementById('game-over').style.display = 'block';
+            document.getElementById('final-score').innerText = player.score;
+            paused = true;
         }
     }
 
+    function createPiece(type) {
+        if (type === 'I') return [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]];
+        if (type === 'L') return [[0,2,0],[0,2,0],[0,2,2]];
+        if (type === 'J') return [[0,3,0],[0,3,0],[3,3,0]];
+        if (type === 'O') return [[4,4],[4,4]];
+        if (type === 'Z') return [[5,5,0],[0,5,5],[0,0,0]];
+        if (type === 'S') return [[0,6,6],[6,6,0],[0,0,0]];
+        if (type === 'T') return [[0,7,0],[7,7,7],[0,0,0]];
+    }
+
+    function resetGame() {
+        arena.forEach(row => row.fill(0));
+        player.score = 0;
+        updateScore();
+        document.getElementById('game-over').style.display = 'none';
+        paused = false;
+        playerReset();
+    }
+
     const arena = createArena(10, 20);
-    const player = {
-        pos: {x: 0, y: 0},
-        matrix: null,
-        score: 0,
-    };
-
-    // Управление для внешних функций
-    window.move = (dir) => playerMove(dir);
-    window.rotate = () => playerRotate(1);
-    window.drop = () => playerDrop();
-
-    // Клавиатура для ПК
-    document.addEventListener('keydown', event => {
-        if (event.keyCode === 37) playerMove(-1);
-        else if (event.keyCode === 39) playerMove(1);
-        else if (event.keyCode === 40) playerDrop();
-        else if (event.keyCode === 38) playerRotate(1);
-    });
-
+    const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
     let dropCounter = 0;
-    let dropInterval = 1000;
+    let dropInterval = 800;
     let lastTime = 0;
+    let paused = false;
+
+    window.move = move => { if(!paused) playerMove(move) };
+    window.rotate = () => { if(!paused) playerRotate() };
+    window.drop = () => { if(!paused) playerDrop() };
 
     function update(time = 0) {
-        const deltaTime = time - lastTime;
-        lastTime = time;
-
-        dropCounter += deltaTime;
-        if (dropCounter > dropInterval) {
-            playerDrop();
+        if (!paused) {
+            const deltaTime = time - lastTime;
+            lastTime = time;
+            dropCounter += deltaTime;
+            if (dropCounter > dropInterval) playerDrop();
+            draw();
         }
-
-        draw();
         requestAnimationFrame(update);
     }
 
     playerReset();
     update();
+
+    // Слушатель клавиатуры
+    document.addEventListener('keydown', e => {
+        if(e.keyCode === 37) playerMove(-1);
+        if(e.keyCode === 39) playerMove(1);
+        if(e.keyCode === 40) playerDrop();
+        if(e.keyCode === 38) playerRotate();
+    });
 </script>
 </body>
 </html>
