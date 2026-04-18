@@ -2,117 +2,136 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Glass Calc Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Ultimate Glass Calc</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Базовые настройки тем */
         :root {
-            --bg-gradient: linear-gradient(45deg, #1e3a8a, #3b82f6);
+            --bg-gradient: linear-gradient(135deg, #1e3a8a, #3b82f6);
             --glass-bg: rgba(255, 255, 255, 0.1);
             --glass-border: rgba(255, 255, 255, 0.2);
             --text-color: #ffffff;
-            --accent-color: #ffffff;
         }
 
         .theme-blue { --bg-gradient: linear-gradient(135deg, #0f172a, #1e40af); }
         .theme-purple { --bg-gradient: linear-gradient(135deg, #2e1065, #7c3aed); }
         .theme-green { --bg-gradient: linear-gradient(135deg, #064e3b, #10b981); }
-        .theme-dark { --bg-gradient: linear-gradient(135deg, #000000, #4b5563); }
+        .theme-dark { --bg-gradient: linear-gradient(135deg, #000000, #333333); }
+
+        * { box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
             height: 100vh;
+            height: 100dvh; /* Для мобильных браузеров */
             background: var(--bg-gradient);
             transition: background 0.5s ease;
             color: var(--text-color);
             overflow: hidden;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* Выбор темы */
+        /* Выбор темы - компактный */
         .theme-selector {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            padding: 20px 0 10px;
+            gap: 20px;
+            padding: 10px;
+            padding-top: env(safe-area-inset-top); /* Отступ от челки */
         }
 
         .theme-dot {
-            width: 30px;
-            height: 30px;
+            width: 25px;
+            height: 25px;
             border-radius: 50%;
-            border: 2px solid white;
+            border: 2px solid rgba(255,255,255,0.5);
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        .calc-wrapper {
-            width: 100%;
-            max-width: 400px;
-            margin: auto auto 20px;
+        /* Область дисплея - занимает все свободное место сверху */
+        .display-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
             padding: 20px;
-            box-sizing: border-box;
-        }
-
-        #display-container {
             text-align: right;
-            padding: 20px;
-            margin-bottom: 10px;
+        }
+
+        #history {
+            font-size: 1.2rem;
+            opacity: 0.6;
+            margin-bottom: 5px;
+            min-height: 1.5rem;
+            word-break: break-all;
         }
 
         #display {
-            font-size: 4.5rem;
+            font-size: 15vw; /* Размер шрифта зависит от ширины экрана */
             font-weight: 200;
             margin: 0;
-            text-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            line-height: 1;
         }
 
-        .grid {
+        /* Сетка кнопок - всегда внизу */
+        .keypad {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
+            gap: 10px;
+            padding: 15px;
+            padding-bottom: calc(15px + env(safe-area-inset-bottom));
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px 30px 0 0;
         }
 
         button {
-            aspect-ratio: 1/1;
-            border-radius: 20px;
+            width: 100%;
+            aspect-ratio: 1 / 0.9; /* Слегка прямоугольные для экономии места */
+            border-radius: 18px;
             border: 1px solid var(--glass-border);
             background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
             color: white;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: 300;
             cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s ease;
         }
 
         button:active {
-            transform: scale(0.9);
             background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.95);
         }
 
         button.operator {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.2);
             font-weight: 500;
-            border: 1px solid rgba(255, 255, 255, 0.4);
         }
 
-        button.double {
+        button.equal {
+            background: white;
+            color: black;
+            font-weight: bold;
+        }
+
+        .double {
             grid-column: span 2;
             aspect-ratio: auto;
         }
 
-        #history {
-            height: 20px;
-            font-size: 1.1rem;
-            opacity: 0.6;
-            margin-bottom: 5px;
+        /* Адаптация для очень маленьких экранов */
+        @media (max-height: 600px) {
+            #display { font-size: 12vw; }
+            button { font-size: 1.4rem; }
+            .keypad { gap: 5px; padding: 10px; }
         }
     </style>
 </head>
@@ -125,37 +144,35 @@
     <div class="theme-dot" style="background: #333333;" onclick="setTheme('theme-dark')"></div>
 </div>
 
-<div class="calc-wrapper">
-    <div id="display-container">
-        <div id="history"></div>
-        <div id="display">0</div>
-    </div>
-    
-    <div class="grid">
-        <button class="operator" onclick="clearAll()">AC</button>
-        <button class="operator" onclick="deleteLast()">⌫</button>
-        <button class="operator" onclick="append('%')">%</button>
-        <button class="operator" onclick="append('/')">÷</button>
+<div class="display-area">
+    <div id="history"></div>
+    <div id="display">0</div>
+</div>
 
-        <button onclick="append('7')">7</button>
-        <button onclick="append('8')">8</button>
-        <button onclick="append('9')">9</button>
-        <button class="operator" onclick="append('*')">×</button>
+<div class="keypad">
+    <button class="operator" onclick="clearAll()">AC</button>
+    <button class="operator" onclick="deleteLast()">⌫</button>
+    <button class="operator" onclick="append('%')">%</button>
+    <button class="operator" onclick="append('/')">÷</button>
 
-        <button onclick="append('4')">4</button>
-        <button onclick="append('5')">5</button>
-        <button onclick="append('6')">6</button>
-        <button class="operator" onclick="append('-')">−</button>
+    <button onclick="append('7')">7</button>
+    <button onclick="append('8')">8</button>
+    <button onclick="append('9')">9</button>
+    <button class="operator" onclick="append('*')">×</button>
 
-        <button onclick="append('1')">1</button>
-        <button onclick="append('2')">2</button>
-        <button onclick="append('3')">3</button>
-        <button class="operator" onclick="append('+')">+</button>
+    <button onclick="append('4')">4</button>
+    <button onclick="append('5')">5</button>
+    <button onclick="append('6')">6</button>
+    <button class="operator" onclick="append('-')">−</button>
 
-        <button onclick="append('0')" class="double">0</button>
-        <button onclick="append('.')">.</button>
-        <button class="operator" style="background: white; color: black;" onclick="calculate()">=</button>
-    </div>
+    <button onclick="append('1')">1</button>
+    <button onclick="append('2')">2</button>
+    <button onclick="append('3')">3</button>
+    <button class="operator" onclick="append('+')">+</button>
+
+    <button onclick="append('0')" class="double">0</button>
+    <button onclick="append('.')">.</button>
+    <button class="equal" onclick="calculate()">=</button>
 </div>
 
 <script>
@@ -165,7 +182,7 @@
 
     tg.ready();
     tg.expand();
-    tg.setHeaderColor('#000000'); // Пытаемся сделать шапку темной
+    tg.enableClosingConfirmation(); // Чтобы случайно не закрыть свайпом
 
     let currentInput = '';
 
@@ -176,10 +193,11 @@
 
     function updateDisplay() {
         display.innerText = currentInput || '0';
+        // Динамический размер текста в зависимости от длины
         if (currentInput.length > 8) {
-            display.style.fontSize = '2.5rem';
+            display.style.fontSize = '10vw';
         } else {
-            display.style.fontSize = '4.5rem';
+            display.style.fontSize = '15vw';
         }
     }
 
