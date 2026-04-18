@@ -2,154 +2,176 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TG Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pro Calc</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Используем переменные темы Telegram для дизайна */
-        body {
-            --bg-color: var(--tg-theme-bg-color, #ffffff);
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #f5f5f7);
             --text-color: var(--tg-theme-text-color, #000000);
-            --button-color: var(--tg-theme-button-color, #2481cc);
-            --button-text: var(--tg-theme-button-text-color, #ffffff);
-            --hint-color: var(--tg-theme-hint-color, #999999);
-            --secondary-bg: var(--tg-theme-secondary-bg-color, #f4f4f5);
+            --accent-color: #007aff; /* Синий как в iOS */
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #ffffff);
+            --button-bg: #ffffff;
+        }
 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
+            padding: 0;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end; /* Калькулятор будет внизу, как на iPhone */
             height: 100vh;
             overflow: hidden;
+            user-select: none; /* Запрещаем выделение текста (убирает синие рамки) */
+            -webkit-tap-highlight-color: transparent; /* Убирает блик при нажатии */
         }
 
-        .calc-container {
-            flex: 1;
+        .calc-wrapper {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-sizing: border-box;
+            background: var(--bg-color);
+        }
+
+        #display-container {
+            padding: 20px;
+            text-align: right;
             display: flex;
             flex-direction: column;
-            padding: 20px;
-            max-width: 400px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
+            justify-content: flex-end;
+            min-height: 120px;
+        }
+
+        #history {
+            font-size: 1.2rem;
+            color: var(--tg-theme-hint-color, #8e8e93);
+            margin-bottom: 8px;
+            height: 1.4rem;
         }
 
         #display {
-            width: 100%;
-            height: 80px;
-            font-size: 3rem;
-            text-align: right;
-            border: none;
-            background: transparent;
-            color: var(--text-color);
-            margin-bottom: 20px;
-            outline: none;
-            font-weight: 300;
+            font-size: 4rem;
+            font-weight: 200;
+            margin: 0;
+            overflow-x: auto;
+            white-space: nowrap;
         }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(4, 1-fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 12px;
-            flex: 1;
+            padding-bottom: 30px;
         }
 
         button {
+            aspect-ratio: 1 / 1; /* Делает кнопки идеально квадратными */
             border: none;
-            border-radius: 12px;
-            font-size: 1.5rem;
-            font-weight: 500;
+            border-radius: 50%; /* Круглые кнопки как в iOS */
+            font-size: 1.6rem;
+            font-weight: 400;
             cursor: pointer;
-            transition: opacity 0.1s, transform 0.1s;
             background-color: var(--secondary-bg);
             color: var(--text-color);
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 60px;
+            transition: transform 0.1s, brightness 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
         button:active {
-            opacity: 0.7;
-            transform: scale(0.95);
+            transform: scale(0.9);
+            filter: brightness(0.8);
         }
 
         button.operator {
-            background-color: var(--button-color);
-            color: var(--button-text);
+            background-color: var(--accent-color);
+            color: white;
+            font-size: 1.8rem;
         }
 
-        button.double {
+        button.special {
+            background-color: #d1d1d6;
+            color: black;
+        }
+
+        /* Темная тема для спец-кнопок */
+        @media (prefers-color-scheme: dark) {
+            button.special { background-color: #3a3a3c; color: white; }
+        }
+
+        .double {
             grid-column: span 2;
-        }
-
-        .history {
-            font-size: 1rem;
-            color: var(--hint-color);
-            text-align: right;
-            min-height: 1.2rem;
-            margin-bottom: 5px;
+            aspect-ratio: auto;
+            border-radius: 40px;
+            padding-left: 25px;
+            justify-content: flex-start;
         }
     </style>
 </head>
 <body>
 
-<div class="calc-container">
-    <div class="history" id="history"></div>
-    <input type="text" id="display" placeholder="0" readonly>
+<div class="calc-wrapper">
+    <div id="display-container">
+        <div id="history"></div>
+        <div id="display">0</div>
+    </div>
     
     <div class="grid">
-        <button onclick="clearAll()" style="color: #ff3b30;">AC</button>
-        <button onclick="deleteLast()">DEL</button>
-        <button onclick="append('%')" class="operator">%</button>
-        <button onclick="append('/')" class="operator">÷</button>
+        <button class="special" onclick="clearAll()">AC</button>
+        <button class="special" onclick="deleteLast()">⌫</button>
+        <button class="special" onclick="append('%')">%</button>
+        <button class="operator" onclick="append('/')">÷</button>
 
         <button onclick="append('7')">7</button>
         <button onclick="append('8')">8</button>
         <button onclick="append('9')">9</button>
-        <button onclick="append('*')" class="operator">×</button>
+        <button class="operator" onclick="append('*')">×</button>
 
         <button onclick="append('4')">4</button>
         <button onclick="append('5')">5</button>
         <button onclick="append('6')">6</button>
-        <button onclick="append('-')" class="operator">−</button>
+        <button class="operator" onclick="append('-')">−</button>
 
         <button onclick="append('1')">1</button>
         <button onclick="append('2')">2</button>
         <button onclick="append('3')">3</button>
-        <button onclick="append('+')" class="operator">+</button>
+        <button class="operator" onclick="append('+')">+</button>
 
         <button onclick="append('0')" class="double">0</button>
         <button onclick="append('.')">.</button>
-        <button onclick="calculate()" class="operator">=</button>
+        <button class="operator" onclick="calculate()">=</button>
     </div>
 </div>
 
 <script>
-    // Инициализация Telegram WebApp
     const tg = window.Telegram.WebApp;
     const display = document.getElementById('display');
     const historyDiv = document.getElementById('history');
 
-    // Сообщаем Telegram, что приложение готово и разворачиваем его
     tg.ready();
     tg.expand();
-
-    // Устанавливаем цвет хедера в тон темы
-    tg.setHeaderColor('secondary_bg_color');
 
     let currentInput = '';
 
     function updateDisplay() {
-        display.value = currentInput || '0';
+        display.innerText = currentInput || '0';
+        // Авто-уменьшение шрифта если число длинное
+        if (currentInput.length > 7) {
+            display.style.fontSize = '2.5rem';
+        } else {
+            display.style.fontSize = '4rem';
+        }
     }
 
     function append(char) {
-        // Легкая вибрация при нажатии (только в мобильном ТГ)
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-        
+        if (currentInput === '0' && char !== '.') currentInput = '';
         currentInput += char;
         updateDisplay();
     }
@@ -168,27 +190,17 @@
     function calculate() {
         try {
             if (!currentInput) return;
-            
-            // Заменяем символы для корректного вычисления в JS
             const expression = currentInput.replace('×', '*').replace('÷', '/');
-            const result = eval(expression);
+            const result = Number(eval(expression).toFixed(8)); // Округляем до 8 знаков
             
             historyDiv.innerText = currentInput + ' =';
             currentInput = result.toString();
             updateDisplay();
 
-            // Показываем кнопку "Отправить результат" в самом Telegram
-            tg.MainButton.setText("ОТПРАВИТЬ РЕЗУЛЬТАТ: " + result);
-            tg.MainButton.show();
-            
-            // Если нажать на кнопку ТГ - данные уйдут боту
-            tg.MainButton.onClick(() => {
-                tg.sendData(result.toString()); 
-            });
-
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
         } catch (e) {
-            display.value = 'Ошибка';
-            setTimeout(clearAll, 1500);
+            display.innerText = 'Ошибка';
+            setTimeout(clearAll, 1000);
         }
     }
 </script>
