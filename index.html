@@ -3,131 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>АРН «ПРИКАЗ» — Тактическая панель</title>
+    <title>АРН «ПРИКАЗ» — Full Adaptive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto+Mono:wght@400;700&family=Press+Start+2P&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
         
-        :root {
-            --army-green: #3b4232;
-            --army-dark: #1a1d16;
-            --accent: #d97706;
-        }
+        :root { --army-green: #3b4232; --army-dark: #1a1d16; --accent: #d97706; }
 
         body {
             font-family: 'Roboto Mono', monospace;
             background-color: var(--army-dark);
-            background-image: 
-                linear-gradient(rgba(59, 66, 50, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(59, 66, 50, 0.1) 1px, transparent 1px);
+            background-image: linear-gradient(rgba(59,66,50,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59,66,50,0.1) 1px, transparent 1px);
             background-size: 20px 20px;
             color: #e2e8f0;
             min-height: 100vh;
             margin: 0;
-            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            padding: env(safe-area-inset-top) 10px env(safe-area-inset-bottom);
         }
 
-        .stencil-text { font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
+        .stencil-text { font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
 
         .military-card {
-            background: rgba(26, 29, 22, 0.95);
+            background: rgba(26, 29, 22, 0.98);
             border: 2px solid var(--army-green);
-            backdrop-filter: blur(10px);
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* Адаптивное колесо */
-        .wheel-outer {
-            position: relative;
-            width: 100%;
-            max-width: 500px; /* Максимальный размер на ПК */
-            margin: 0 auto;
-            aspect-ratio: 1/1;
-        }
-
-        .wheel-container {
-            width: 100%;
-            height: 100%;
-            border: 8px solid #4a5568;
-            border-radius: 50%;
-            background: #000;
-            position: relative;
-            overflow: hidden;
-        }
-
-        canvas {
-            width: 100% !important;
-            height: 100% !important;
-            transition: transform 7s cubic-bezier(0.15, 0, 0.15, 1);
-        }
-
+        .wheel-outer { position: relative; width: 100%; max-width: 450px; margin: 0 auto; aspect-ratio: 1/1; }
+        .wheel-container { width: 100%; height: 100%; border: 6px solid #4a5568; border-radius: 50%; overflow: hidden; position: relative; }
+        
+        canvas { width: 100% !important; height: 100% !important; transition: transform 7s cubic-bezier(0.15, 0, 0.15, 1); }
+        
         .pointer {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0; height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 30px solid var(--accent);
-            z-index: 100;
-            filter: drop-shadow(0 0 10px var(--accent));
+            position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid var(--accent);
+            z-index: 100; filter: drop-shadow(0 0 10px var(--accent));
         }
 
-        .lcd-display {
-            background: #0a0c08;
-            border: 1px solid var(--accent);
-            color: var(--accent);
-            text-shadow: 0 0 5px var(--accent);
-        }
-
-        .btn-military {
-            background: var(--army-green);
-            border-bottom: 4px solid #242a1f;
-            transition: all 0.1s;
-        }
+        .btn-military { background: var(--army-green); border-bottom: 4px solid #242a1f; transition: all 0.1s; }
         .btn-military:active { border-bottom-width: 0; transform: translateY(4px); }
 
-        /* Кастомный скролл */
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: var(--army-green); border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: var(--army-green); border-radius: 2px; }
 
-        .scanline {
-            position: fixed; inset: 0;
-            background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.05) 50%);
-            background-size: 100% 4px;
-            pointer-events: none; z-index: 1000;
-        }
+        .exclusion-badge { font-size: 9px; padding: 1px 4px; border-radius: 3px; background: rgba(217,119,6,0.2); color: var(--accent); border: 1px solid var(--accent); }
     </style>
 </head>
-<body class="p-2 md:p-6 lg:p-10">
-    <div class="scanline"></div>
-    
-    <div class="max-w-[1600px] mx-auto space-y-4 md:space-y-8">
-        <header class="flex flex-col md:flex-row justify-between items-center military-card p-4 md:p-6 rounded-xl gap-4">
+<body class="p-2 md:p-6">
+
+    <div class="max-w-[1400px] mx-auto space-y-4">
+        <header class="military-card p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="text-center md:text-left">
-                <h1 class="text-3xl md:text-5xl font-bold stencil-text text-white">АРН «ПРИКАЗ»</h1>
-                <p class="text-[10px] md:text-xs text-amber-500 opacity-70 tracking-widest uppercase font-bold">Тактический модуль распределения</p>
+                <h1 class="text-2xl md:text-4xl font-bold stencil-text text-white">АРН «ПРИКАЗ»</h1>
+                <p class="text-[10px] text-amber-500 font-bold uppercase tracking-widest">Личный состав и наряды</p>
             </div>
-            <div class="lcd-display px-6 py-2 rounded border-amber-600/50">
-                <div id="systemStatus" class="text-xl md:text-2xl font-bold tracking-tighter">СИСТЕМА ГОТОВА</div>
+            <div class="bg-black px-6 py-2 border border-amber-600/30 rounded">
+                <div id="systemStatus" class="text-amber-500 font-bold text-sm md:text-lg">ГОТОВ К РАБОТЕ</div>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             
             <div class="lg:col-span-3 space-y-4 order-2 lg:order-1">
-                <div class="military-card p-4 rounded-xl flex flex-col h-[400px] lg:h-[600px]">
-                    <h2 class="stencil-text text-xl mb-4 border-b border-white/10 pb-2 flex justify-between">
-                        <span>Бойцы</span>
-                        <span id="pCount" class="text-sm opacity-50">0 чел.</span>
-                    </h2>
-                    <div id="namesList" class="flex-1 overflow-y-auto custom-scroll space-y-2 pr-2">
+                <div class="military-card p-4 rounded-xl h-[350px] md:h-[450px] flex flex-col">
+                    <h2 class="stencil-text text-lg border-b border-white/10 pb-2 mb-3">Состав</h2>
+                    <div id="namesList" class="flex-1 overflow-y-auto custom-scroll space-y-2 pr-1"></div>
+                </div>
+
+                <div class="military-card p-4 rounded-xl">
+                    <h2 class="stencil-text text-sm mb-3 border-b border-white/10 pb-2">Квоты</h2>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-black/40 p-2 rounded">
+                            <label class="text-[9px] uppercase text-amber-500 block">Курс</label>
+                            <input type="number" id="q_kurs" value="1" min="0" class="bg-transparent w-full font-bold text-lg outline-none">
                         </div>
+                        <div class="bg-black/40 p-2 rounded">
+                            <label class="text-[9px] uppercase text-blue-400 block">КПП</label>
+                            <input type="number" id="q_kpp" value="1" min="0" class="bg-transparent w-full font-bold text-lg outline-none">
+                        </div>
+                        <div class="bg-black/40 p-2 rounded">
+                            <label class="text-[9px] uppercase text-emerald-400 block">Патруль</label>
+                            <input type="number" id="q_patrol" value="1" min="0" class="bg-transparent w-full font-bold text-lg outline-none">
+                        </div>
+                        <div class="bg-black/40 p-2 rounded">
+                            <label class="text-[9px] uppercase text-rose-400 block">Кухня</label>
+                            <input type="number" id="q_mess" value="1" min="0" class="bg-transparent w-full font-bold text-lg outline-none">
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-6 flex flex-col items-center justify-center space-y-6 order-1 lg:order-2 py-4">
+            <div class="lg:col-span-6 flex flex-col items-center py-4 order-1 lg:order-2">
                 <div class="wheel-outer">
                     <div class="pointer"></div>
                     <div class="wheel-container">
@@ -135,58 +101,60 @@
                     </div>
                 </div>
                 
-                <div class="w-full max-w-[400px] grid grid-cols-1 gap-4">
-                    <button id="spinBtn" onclick="processSelection()" 
-                        class="btn-military w-full py-4 md:py-6 text-xl md:text-2xl font-bold stencil-text text-white tracking-widest rounded-lg shadow-xl">
-                        РАСПРЕДЕЛИТЬ
-                    </button>
-                    <div class="flex items-center justify-between p-3 military-card rounded-lg bg-black/20">
-                        <span class="text-[10px] uppercase font-bold">Авто-режим</span>
+                <div class="w-full max-w-[350px] mt-6 space-y-4">
+                    <button id="spinBtn" onclick="processSelection()" class="btn-military w-full py-4 text-xl font-bold stencil-text text-white rounded-lg">РАСПРЕДЕЛИТЬ</button>
+                    <div class="flex items-center justify-between p-3 military-card rounded-lg text-xs font-bold uppercase">
+                        <span>Авто-вращение</span>
                         <input type="checkbox" id="autoSpinToggle" class="w-5 h-5 accent-amber-500">
                     </div>
                 </div>
             </div>
 
-            <div class="md:col-span-2 lg:col-span-3 space-y-4 order-3">
-                <div class="military-card p-4 rounded-xl flex flex-col h-full min-h-[400px]">
-                    <h2 class="stencil-text text-xl mb-4 border-b border-white/10 pb-2 text-center">Ведомость</h2>
-                    <div id="resultsTable" class="flex-1 overflow-y-auto custom-scroll space-y-4">
-                        <div id="group_kurs" class="space-y-1">
-                            <div class="text-[10px] text-amber-500 font-bold uppercase">Наряд по курсу</div>
-                            <div class="bg-black/40 rounded p-2 border-l-2 border-amber-600 content-list text-sm"></div>
+            <div class="lg:col-span-3 order-3">
+                <div class="military-card p-4 rounded-xl h-full min-h-[350px]">
+                    <h2 class="stencil-text text-lg border-b border-white/10 pb-2 mb-4 text-center">Ведомость</h2>
+                    <div id="resultsTable" class="space-y-4 overflow-y-auto custom-scroll max-h-[500px]">
+                        <div id="group_kurs">
+                            <div class="text-[10px] text-amber-500 font-bold uppercase mb-1">Наряд по курсу</div>
+                            <div class="bg-black/40 rounded p-2 border-l-2 border-amber-600 content-list text-xs space-y-1"></div>
                         </div>
-                        <div id="group_kpp" class="space-y-1">
-                            <div class="text-[10px] text-blue-400 font-bold uppercase">Наряд по КПП</div>
-                            <div class="bg-black/40 rounded p-2 border-l-2 border-blue-600 content-list text-sm"></div>
+                        <div id="group_kpp">
+                            <div class="text-[10px] text-blue-400 font-bold uppercase mb-1">Наряд по КПП</div>
+                            <div class="bg-black/40 rounded p-2 border-l-2 border-blue-600 content-list text-xs space-y-1"></div>
                         </div>
-                        <div id="group_patrol" class="space-y-1">
-                            <div class="text-[10px] text-emerald-500 font-bold uppercase">Патруль</div>
-                            <div class="bg-black/40 rounded p-2 border-l-2 border-emerald-600 content-list text-sm"></div>
+                        <div id="group_patrol">
+                            <div class="text-[10px] text-emerald-500 font-bold uppercase mb-1">Патруль</div>
+                            <div class="bg-black/40 rounded p-2 border-l-2 border-emerald-600 content-list text-xs space-y-1"></div>
                         </div>
-                        <div id="group_mess" class="space-y-1">
-                            <div class="text-[10px] text-rose-500 font-bold uppercase">Столовая</div>
-                            <div class="bg-black/40 rounded p-2 border-l-2 border-rose-600 content-list text-sm"></div>
+                        <div id="group_mess">
+                            <div class="text-[10px] text-rose-500 font-bold uppercase mb-1">Столовая</div>
+                            <div class="bg-black/40 rounded p-2 border-l-2 border-rose-600 content-list text-xs space-y-1"></div>
                         </div>
                     </div>
-                    <button onclick="resetAssignments()" class="mt-4 text-[10px] uppercase text-slate-500 hover:text-rose-400 text-center">Сброс всех данных</button>
+                    <button onclick="resetAssignments()" class="w-full mt-4 text-[9px] uppercase text-slate-600 hover:text-rose-400">Сброс всех данных</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="winnerModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[3000] p-4">
-        <div class="military-card p-6 md:p-10 rounded-xl max-w-sm w-full text-center border-amber-600">
-            <div class="text-amber-600 text-[10px] font-bold uppercase mb-2">Назначение утверждено:</div>
-            <div id="modalDetail" class="text-xs text-white/50 mb-4 uppercase">---</div>
-            <div id="modalWinner" class="text-3xl md:text-4xl font-bold stencil-text text-white mb-8 py-6 bg-white/5 rounded">---</div>
-            <button onclick="closeWinnerModal()" class="btn-military w-full py-4 text-white font-bold uppercase rounded text-lg">ПРИНЯЛ!</button>
+    <div id="exclusionModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[2000] p-4">
+        <div class="military-card p-6 rounded-xl w-full max-w-xs">
+            <h3 id="excName" class="stencil-text text-xl mb-4 text-white">Боец</h3>
+            <div class="space-y-2 mb-6" id="excOptions">
+                </div>
+            <button onclick="saveExclusions()" class="btn-military w-full py-3 text-white font-bold rounded">СОХРАНИТЬ</button>
+        </div>
+    </div>
+
+    <div id="winnerModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[3000] p-4">
+        <div class="military-card p-8 rounded-xl w-full max-w-sm text-center border-amber-600">
+            <div id="modalDetail" class="text-[10px] text-amber-500 uppercase font-bold mb-2">---</div>
+            <div id="modalWinner" class="text-3xl font-bold stencil-text text-white mb-8 py-6 bg-white/5 rounded">---</div>
+            <button onclick="closeWinnerModal()" class="btn-military w-full py-4 text-white font-bold text-lg rounded">ПРИНЯЛ!</button>
         </div>
     </div>
 
     <script>
-        // ... (Весь JavaScript остается таким же, как в твоем файле, он отлично работает) ...
-        // Но я добавлю маленькую правку для корректной отрисовки шрифтов на канвасе при масштабировании:
-
         const canvas = document.getElementById('wheelCanvas');
         const ctx = canvas.getContext('2d');
         const namesListContainer = document.getElementById('namesList');
@@ -206,127 +174,133 @@
             { name: 'Журдзинский', exc: [] }, { name: 'Стрельцов', exc: [] }
         ];
         
-        let currentRotation = 0;
-        let isSpinning = false;
-        let assignments = [];
-
+        let assignments = [], currentRotation = 0, isSpinning = false, editingIdx = -1;
         const detailTypes = [
-            { id: 'kurs', label: 'По курсу', color: '#b45309', input: 'q_kurs' },
-            { id: 'kpp', label: 'По КПП', color: '#1d4ed8', input: 'q_kpp' },
-            { id: 'patrol', label: 'Патруль', color: '#047857', input: 'q_patrol' },
-            { id: 'mess', label: 'Столовая', color: '#be123c', input: 'q_mess' }
+            { id: 'kurs', label: 'По курсу', input: 'q_kurs' },
+            { id: 'kpp', label: 'По КПП', input: 'q_kpp' },
+            { id: 'patrol', label: 'Патруль', input: 'q_patrol' },
+            { id: 'mess', label: 'Столовая', input: 'q_mess' }
         ];
 
-        function init() {
-            renderParticipants();
-            drawWheel();
-            updateAssignmentsUI();
-        }
+        function init() { renderParticipants(); drawWheel(); updateAssignmentsUI(); }
 
         function renderParticipants() {
             namesListContainer.innerHTML = '';
             participants.forEach((p, i) => {
-                const isAssigned = assignments.find(a => a.name === p.name);
+                const assigned = assignments.find(a => a.name === p.name);
                 const div = document.createElement('div');
-                div.className = `flex justify-between items-center bg-black/40 p-2 rounded border-l-2 ${isAssigned ? 'opacity-20 grayscale border-slate-900' : 'border-slate-600'}`;
-                div.innerHTML = `<span class="text-xs font-bold text-slate-200">${p.name.toUpperCase()}</span>`;
+                div.className = `flex justify-between items-center bg-black/40 p-2 rounded border-l-2 ${assigned ? 'opacity-20 border-slate-900' : 'border-slate-600'}`;
+                
+                let tags = p.exc.map(e => `<span class="exclusion-badge ml-1">${e[0].toUpperCase()}</span>`).join('');
+                
+                div.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold text-slate-200">${p.name.toUpperCase()}</span>
+                        <div class="flex mt-1">${tags}</div>
+                    </div>
+                    ${!assigned ? `<button onclick="openExclusions(${i})" class="text-slate-500">🔒</button>` : ''}
+                `;
                 namesListContainer.appendChild(div);
             });
-            document.getElementById('pCount').textContent = `${participants.length} чел.`;
+        }
+
+        function openExclusions(idx) {
+            editingIdx = idx;
+            const p = participants[idx];
+            document.getElementById('excName').textContent = p.name.toUpperCase();
+            const opts = document.getElementById('excOptions');
+            opts.innerHTML = detailTypes.map(t => `
+                <label class="flex items-center gap-3 p-2 bg-white/5 rounded">
+                    <input type="checkbox" value="${t.id}" ${p.exc.includes(t.id) ? 'checked' : ''} class="exc-check w-4 h-4">
+                    <span class="text-xs uppercase font-bold">${t.label}</span>
+                </label>
+            `).join('');
+            document.getElementById('exclusionModal').style.display = 'flex';
+        }
+
+        function saveExclusions() {
+            const checks = document.querySelectorAll('.exc-check');
+            participants[editingIdx].exc = Array.from(checks).filter(c => c.checked).map(c => c.value);
+            document.getElementById('exclusionModal').style.display = 'none';
+            renderParticipants(); drawWheel();
         }
 
         function drawWheel() {
-            const size = canvas.width;
-            const center = size / 2;
-            const radius = center - 10;
-            const sliceAngle = (2 * Math.PI) / participants.length;
-
-            ctx.clearRect(0, 0, size, size);
-
+            const center = 400, radius = 390, slice = (2 * Math.PI) / participants.length;
+            ctx.clearRect(0, 0, 800, 800);
             participants.forEach((p, i) => {
-                const angle = i * sliceAngle;
+                const angle = i * slice;
                 ctx.beginPath();
-                ctx.fillStyle = i % 2 === 0 ? '#1a1d16' : '#0a0b08';
+                ctx.fillStyle = i % 2 ? '#1a1d16' : '#0a0b08';
                 ctx.moveTo(center, center);
-                ctx.arc(center, center, radius, angle, angle + sliceAngle);
+                ctx.arc(center, center, radius, angle, angle + slice);
                 ctx.fill();
-                ctx.strokeStyle = '#3b4232';
-                ctx.stroke();
-
+                ctx.strokeStyle = '#3b4232'; ctx.stroke();
                 ctx.save();
-                ctx.translate(center, center);
-                ctx.rotate(angle + sliceAngle / 2);
-                ctx.textAlign = 'right';
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 28px Oswald';
-                ctx.fillText(p.name.toUpperCase(), radius - 30, 10);
+                ctx.translate(center, center); ctx.rotate(angle + slice/2);
+                ctx.textAlign = 'right'; ctx.fillStyle = p.exc.length ? '#d97706' : '#fff';
+                ctx.font = 'bold 22px Oswald'; ctx.fillText(p.name.toUpperCase(), radius - 30, 8);
                 ctx.restore();
             });
         }
 
-        function processSelection() {
-            if (isSpinning) return;
-            // Упрощенная логика для теста - берем наряд по очереди
-            const targetDetail = detailTypes[0]; 
-            spin(targetDetail);
+        function getNextNeeded() {
+            for(const t of detailTypes) {
+                const req = parseInt(document.getElementById(t.input).value) || 0;
+                if(assignments.filter(a => a.typeId === t.id).length < req) return t;
+            }
+            return null;
         }
 
-        function spin(targetDetail) {
-            isSpinning = true;
-            spinBtn.disabled = true;
-            statusDisplay.textContent = "ВРАЩЕНИЕ...";
+        function processSelection() {
+            if(isSpinning) return;
+            const target = getNextNeeded();
+            if(!target) return alert("Все квоты заполнены!");
             
-            const extraSpins = 5 + Math.random() * 5;
-            const totalRotation = extraSpins * 2 * Math.PI + Math.random() * 2 * Math.PI;
-            currentRotation += totalRotation;
+            const avail = participants.filter(p => !assignments.find(a => a.name === p.name) && !p.exc.includes(target.id));
+            if(!avail.length) return alert("Нет подходящих бойцов!");
+
+            isSpinning = true; spinBtn.disabled = true; statusDisplay.textContent = "ВРАЩЕНИЕ...";
+            const rot = (10 + Math.random() * 5) * 2 * Math.PI + Math.random() * 2 * Math.PI;
+            currentRotation += rot;
             canvas.style.transform = `rotate(${currentRotation}rad)`;
 
             setTimeout(() => {
-                isSpinning = false;
-                spinBtn.disabled = false;
-                statusDisplay.textContent = "ГОТОВО";
-                
-                // Расчет победителя
-                const sliceAngle = (2 * Math.PI) / participants.length;
-                const actualRot = currentRotation % (2 * Math.PI);
-                let winnerIdx = Math.floor((1.5 * Math.PI - actualRot) / sliceAngle);
-                while(winnerIdx < 0) winnerIdx += participants.length;
-                winnerIdx %= participants.length;
-                
-                const winner = participants[winnerIdx];
-                assignments.push({name: winner.name, typeId: targetDetail.id, label: targetDetail.label});
-                
-                showWinnerModal(winner.name, targetDetail.label);
-                updateAssignmentsUI();
-                renderParticipants();
+                isSpinning = false; spinBtn.disabled = false; statusDisplay.textContent = "ГОТОВО";
+                const slice = (2 * Math.PI) / participants.length;
+                let idx = Math.floor((1.5 * Math.PI - (currentRotation % (2 * Math.PI))) / slice);
+                while(idx < 0) idx += participants.length;
+                idx %= participants.length;
+
+                let winner = null;
+                for(let i=0; i<participants.length; i++) {
+                    let p = participants[(idx - i + participants.length) % participants.length];
+                    if(!assignments.find(a => a.name === p.name) && !p.exc.includes(target.id)) { winner = p; break; }
+                }
+
+                if(winner) {
+                    assignments.push({name: winner.name, typeId: target.id, label: target.label});
+                    updateAssignmentsUI(); renderParticipants();
+                    document.getElementById('modalWinner').textContent = winner.name.toUpperCase();
+                    document.getElementById('modalDetail').textContent = target.label;
+                    document.getElementById('winnerModal').style.display = 'flex';
+                }
             }, 7000);
         }
 
         function updateAssignmentsUI() {
-            detailTypes.forEach(type => {
-                const container = document.querySelector(`#group_${type.id} .content-list`);
-                if(!container) return;
-                const list = assignments.filter(a => a.typeId === type.id);
-                container.innerHTML = list.length ? list.map(a => `<div>• ${a.name.toUpperCase()}</div>`).join('') : 'ВАКАНТНО';
+            detailTypes.forEach(t => {
+                const list = assignments.filter(a => a.typeId === t.id);
+                document.querySelector(`#group_${t.id} .content-list`).innerHTML = list.length ? list.map(a => `<div>• ${a.name.toUpperCase()}</div>`).join('') : '<span class="opacity-30 italic">ВАКАНТНО</span>';
             });
         }
 
-        function showWinnerModal(name, detail) {
-            document.getElementById('modalWinner').textContent = name.toUpperCase();
-            document.getElementById('modalDetail').textContent = detail;
-            document.getElementById('winnerModal').classList.replace('hidden', 'flex');
-        }
-
         function closeWinnerModal() {
-            document.getElementById('winnerModal').classList.replace('flex', 'hidden');
+            document.getElementById('winnerModal').style.display = 'none';
+            if(document.getElementById('autoSpinToggle').checked && getNextNeeded()) setTimeout(processSelection, 500);
         }
 
-        function resetAssignments() {
-            assignments = [];
-            currentRotation = 0;
-            canvas.style.transform = `rotate(0rad)`;
-            init();
-        }
+        function resetAssignments() { assignments = []; currentRotation = 0; canvas.style.transform = `rotate(0rad)`; init(); }
 
         window.onload = init;
     </script>
